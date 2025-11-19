@@ -1,0 +1,18 @@
+{
+  "type": "Catalog",
+  "id": "my-geotiff-catalog",
+  "stac_version": "1.1.0",
+  "description": "A STAC Catalog generated from a GeoTIFF URL.",
+  "links": [
+    {
+      "rel": "root",
+      "href": "./catalog.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "child",
+      "href": "./geotiff-collection/collection.json",
+      "type": "application/json"
+    }
+  ]
+}
