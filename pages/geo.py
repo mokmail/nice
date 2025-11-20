@@ -13,6 +13,7 @@ class Geo:
         self.catalog  = None
         self.collection = None
         self.item = None
+        
     
         self.map_styles = [
         {'name':'Dark', 'value':'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json' , 'description':'Dark background map'},
@@ -107,14 +108,15 @@ class Geo:
             ui.button('Info', on_click=lambda: ui.notify('We are working on it'))
     
     def generate_stac(self , value):
-        result = create_stac_catalog(value)
-        if result:
+        
+        try:
+            result = create_stac_catalog(value)
             with ui.row().classes("w-full h-full") : 
                 self.catalog = ui.json_editor({"content":{"json": result[0].to_dict()}} )
                 self.collection = ui.json_editor({"content":{"json": result[1].to_dict()}})
                 self.item = ui.json_editor({"content":{"json": result[2].to_dict()}})
-        else:
-            self.meldung = ui.label( "Some thing went wrong" )   
+        except Exception as e:
+            ui.notify(e)
   
         
     def stac_generator(self):
