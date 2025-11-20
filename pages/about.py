@@ -14,7 +14,9 @@ class About:
                 ui.chip('Knowledge', color='orange', icon='auto_stories').classes('m-2 text-white text-xl')
                 ui.chip('IT', color='purple', icon='terminal').classes('m-2 text-white text-xl')
                 ui.chip('Security', color='purple', icon='security').classes('m-2 text-white text-xl')
-                ui.chip('Governance', color='green', icon='local_police').classes('m-2 text-white text-xl')   
+                ui.chip('Governance', color='green', icon='local_police').classes('m-2 text-white text-xl') 
+                ui.chip('ESP', color='pink', icon='api').classes('m-2 text-white text-xl')   
+
                 
                
 

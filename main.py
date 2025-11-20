@@ -3,6 +3,7 @@ from navigation.menu import Navigation
 import asyncio
 from pages.about import About
 from pages.geo import Geo
+from pages.ai import AI
 # (Assuming stac import is valid or placeholder)
 # from stac.bevcatalog import create_stac_from_geotiff_url as create_stac_catalog
 
@@ -26,7 +27,11 @@ def maps():
 def about():
     about = About()
     about.create_about()
+@ui.page('/ai')
+def ai():
+    ai = AI()
+    ai.create_ai()
     
 
 
-ui.run()
+ui.run(title='CIO GATE' , fastapi_docs=True , native=False)

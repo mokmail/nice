@@ -96,4 +96,4 @@ def create_stac_from_geotiff_url(geotiff_url: str, catalog_id: str = "my-geotiff
     catalog.normalize_hrefs(os.path.abspath(output_dir))
     catalog.save(catalog_type=pystac.CatalogType.SELF_CONTAINED, dest_href=output_dir)
 
-    return catalog
+    return catalog , collection , item

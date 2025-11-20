@@ -2,30 +2,37 @@
 from navigation.menu import Navigation
 from nicegui import ui
 import asyncio
+from stac.bevcatalog import create_stac_from_geotiff_url as create_stac_catalog 
 
 menu= Navigation()
 
 
 
 class Geo:
-    map_styles = [
-    {'name':'Dark', 'value':'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json' , 'description':'Dark background map'},
-    {'name':'Light', 'value':'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', 'description':'Light background map'},
-    {'name':'Voyager', 'value':'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', 'description':'Voyager background map'},
-    {'name':'Demo', 'value':'https://demotiles.maplibre.org/style.json', 'description':'Demo background map'},
-]
+    def __init__(self):
+        self.catalog  = None
+        self.collection = None
+        self.item = None
+    
+        self.map_styles = [
+        {'name':'Dark', 'value':'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json' , 'description':'Dark background map'},
+        {'name':'Light', 'value':'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', 'description':'Light background map'},
+        {'name':'Voyager', 'value':'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', 'description':'Voyager background map'},
+        {'name':'Demo', 'value':'https://demotiles.maplibre.org/style.json', 'description':'Demo background map'},
+    ]
     def create_geo(self) :
         with ui.tabs().classes('w-full h-full') as tabs:
             maps = ui.tab('Map' )
             info = ui.tab('Info')
-            settings = ui.tab(' Settings')
+            stac = ui.tab(' Stac')
         with ui.tab_panels(tabs , value=maps ).classes('w-full h-full'):
             with ui.tab_panel(maps).classes('w-full h-full'):
                 self.create_ui()    
             with ui.tab_panel(info).classes('w-full h-full'):
-                ui.label('Info')
-            with ui.tab_panel(settings).classes('w-full h-full'):
-                ui.label('Settings')            
+                self.info_panel()
+                # this function will be implemented later 
+            with ui.tab_panel(stac).classes('w-full h-full'):
+                self.stac_generator()       
              
         menu.create_nav()
         # 1. Load MapLibre resources
@@ -88,16 +95,39 @@ class Geo:
                                     ui.chip(style['name'] , color='blue', icon='style')
                                     ui.chip('style' , color='red' , icon='style')
                                     ui.chip('information' , color='green' , removable=True , on_click=lambda: print('removed'))
-
-
-
                             ui.image('https://data.bev.gv.at/geonetwork/images/logos/fef865d2-c0d2-4c3c-bff9-884e60f1e975.png?random1763546621077')
                             ui.separator()
                         
-                            
-                        
-                    
+            
                             ui.button(style['name'], on_click=lambda style=style: self.init_map(style , zoom=slider.value))
                                 
+    def info_panel(self):
+        with ui.card().classes('w-full h-full margin-0'):
+            ui.label('Info')
+            ui.button('Info', on_click=lambda: ui.notify('We are working on it'))
+    
+    def generate_stac(self , value):
+        result = create_stac_catalog(value)
+        if result:
+            with ui.row().classes("w-full h-full") : 
+                self.catalog = ui.json_editor({"content":{"json": result[0].to_dict()}} )
+                self.collection = ui.json_editor({"content":{"json": result[1].to_dict()}})
+                self.item = ui.json_editor({"content":{"json": result[2].to_dict()}})
+        else:
+            self.meldung = ui.label( "Some thing went wrong" )   
+  
+        
+    def stac_generator(self):
+        with ui.card().classes('w-full h-full margin-0').classes('w-full h-screen margin-0'):
+            ui.label('Stac Generator')
+            ui.separator()
+            ui.markdown('### Welcome to the STAC Generator')
+            ui.markdown('Please enter the URL of the GeoTIFF file you want to convert to a STAC catalog')
+            url = ui.input('URL').classes('w-full h-full')
+          
+            
 
+            ui.button('Stac Generator', on_click=lambda: self.generate_stac(url.value) , color='green').classes('w-full')
 
+            
+            

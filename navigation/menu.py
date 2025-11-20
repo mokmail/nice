@@ -9,7 +9,7 @@ class Navigation:
             ui.fab_action('info' , label='Info' , color='blue' , on_click=lambda: ui.notify('The information page is not yet implemented' , color='red' )   )
             ui.fab_action('style' , label='About CIO' , color='orange' , on_click=lambda: ui.navigate.to('/about') )
             ui.fab_action('style' , label='PMO' , color='green' , on_click=lambda: ui.notify('The PMO page is not yet implemented' , color='green' ) )
-            ui.fab_action('auto_awesome' , label='Art. Intelligence' , color='pink' , on_click=lambda: ui.notify('The AI page is not yet implemented' , color='green' ) )
+            ui.fab_action('auto_awesome' , label='Art. Intelligence' , color='pink' , on_click=lambda: ui.navigate.to('/ai') )
          
 
 
