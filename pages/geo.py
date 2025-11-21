@@ -2,7 +2,7 @@
 from navigation.menu import Navigation
 from nicegui import ui
 import asyncio
-from stac.bevcatalog import create_stac_from_geotiff_url as create_stac_catalog 
+from stac.bevcatalog import Bevstac
 
 menu= Navigation()
 
@@ -12,7 +12,7 @@ class Geo:
     def __init__(self):
         self.catalog  = None
         self.collection = None
-        self.item = None
+
         
     
         self.map_styles = [
@@ -21,6 +21,8 @@ class Geo:
         {'name':'Voyager', 'value':'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', 'description':'Voyager background map'},
         {'name':'Demo', 'value':'https://demotiles.maplibre.org/style.json', 'description':'Demo background map'},
     ]
+    
+
     def create_geo(self) :
         with ui.tabs().classes('w-full h-full') as tabs:
             maps = ui.tab('Map' )
@@ -32,8 +34,13 @@ class Geo:
             with ui.tab_panel(info).classes('w-full h-full'):
                 self.info_panel()
                 # this function will be implemented later 
-            with ui.tab_panel(stac).classes('w-full h-full'):
-                self.stac_generator()       
+            with ui.tab_panel(stac):
+                with ui.expansion('Stac Viewer' , icon='map'):
+                    self.stac_viewer_frontend()
+                ui.separator()
+                with ui.expansion('Stac Genarator', icon='map' , value = True).classes('w-full '):
+                    self.stac_generator_frontend()     
+                  
              
         menu.create_nav()
         # 1. Load MapLibre resources
@@ -108,21 +115,20 @@ class Geo:
             ui.button('Info', on_click=lambda: ui.notify('We are working on it'))
     
     def generate_stac(self , value):
-        
+        bevstac = Bevstac()
         try:
-            result = create_stac_catalog(value)
+            result = bevstac.create_stac_from_geotiff_url(value)
             with ui.row().classes("w-full h-full") : 
                 self.catalog = ui.json_editor({"content":{"json": result[0].to_dict()}} )
                 self.collection = ui.json_editor({"content":{"json": result[1].to_dict()}})
                 self.item = ui.json_editor({"content":{"json": result[2].to_dict()}})
-        except Exception as e:
+        except Exception as e: 
             ui.notify(e)
   
         
-    def stac_generator(self):
-        with ui.card().classes('w-full h-full margin-0').classes('w-full h-screen margin-0'):
-            ui.label('Stac Generator')
-            ui.separator()
+    def stac_generator_frontend(self):
+
+        with ui.card().classes('w-full h-fit margin-0'):
             ui.markdown('### Welcome to the STAC Generator')
             ui.markdown('Please enter the URL of the GeoTIFF file you want to convert to a STAC catalog')
             url = ui.input('URL').classes('w-full h-full')
@@ -131,5 +137,7 @@ class Geo:
 
             ui.button('Stac Generator', on_click=lambda: self.generate_stac(url.value) , color='green').classes('w-full')
 
-            
-            
+    def stac_viewer_frontend(self):
+        ui.markdown('# Im a stac viewer implementation')
+
+    
