@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>STAC → Maplibre demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+    <!-- 1. Maplibre GL JS -->
+    <script src="https://unpkg.com/maplibre-gl@2.3.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@2.3.1/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <!-- 2. (Optional) Turf for geometry helpers -->
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+        /* ==================== 1. MAP INIT ==================== */
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    'raster-tiles': {
+                        type: 'raster',
+                        tiles: [
+                            'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=YOUR_TOKEN'
+                        ],
+                        tileSize: 256
+                    }
+                },
+                layers: [{
+                    id: 'satellite',
+                    type: 'raster',
+                    source: 'raster-tiles',
+                    minzoom: 0,
+                    maxzoom: 22
+                }]
+            },
+            center: [4.8897, 45.759], // Nice for a demo; change to your area of interest
+            zoom: 6
+        });
+
+        /* ==================== 2. STAC CONFIG ==================== */
+        const stacUrl = 'https://planetarycomputer.microsoft.com/api/stac/v1';
+        const searchParams = {
+            collections: ['sentinel-2-l2a'],
+            datetime: '2021-01-01/2021-01-02',
+            bbox: '-1,46,1,47', // Replace with your bbox
+            limit: 1 // Grab one item for demo
+        };
+
+        /* ==================== 3. FETCH STAC ITEM ==================== */
+        async function getItem() {
+            const res = await fetch(`${stacUrl}/search?${new URLSearchParams(searchParams).toString()}`);
+            const data = await res.json();
+            if (!data.features || data.features.length === 0) {
+                throw new Error('No items found');
+            }
+            return data.features[0]; // Take first item
+        }
+
+        /* ==================== 4. ADD LAYER ==================== */
+        async function addStacLayer(item) {
+            // 4a. Add footprint (GeoJSON)
+            if (item.geometry) {
+                map.addSource('footprint', { type: 'geojson', data: item.geometry });
+                map.addLayer({
+                    id: 'footprint-fill',
+                    type: 'fill',
+                    source: 'footprint',
+                    paint: {
+                        'fill-color': '#ff0000',
+                        'fill-opacity': 0.2
+                    }
+                });
+            }
+
+            // 4b. Find a suitable asset (prefers a preview tile)
+            const assets = item.assets || {};
+            let tileAsset = null;
+            if (assets.preview) {
+                tileAsset = assets.preview;
+            } else if (assets.data) {
+                // If it’s a raster, use the `data` asset
+                tileAsset = assets.data;
+            }
+
+            if (!tileAsset) {
+                console.warn('No suitable raster asset found');
+                return;
+            }
+
+            // If the asset URL is a single image (e.g., preview), we can treat it as a raster source
+            const url = tileAsset.href;
+
+            // 4c. Add the raster source
+            const sourceId = `stac-${item.id}`;
+            map.addSource(sourceId, {
+                type: 'raster',
+                tiles: [url],      // STAC preview URLs are already tiled
+                tileSize: 256,
+                // Optional: minzoom/maxzoom if you know bounds
+                minzoom: 0,
+                maxzoom: 12
+            });
+
+            // 4d. Add the layer
+            map.addLayer({
+                id: sourceId,
+                type: 'raster',
+                source: sourceId,
+                paint: {
+                    'raster-opacity': 0.7
+                }
+            });
+        }
+
+        /* ==================== 5. MAIN ==================== */
+        (async () => {
+            try {
+                const item = await getItem();
+                map.on('load', () => addStacLayer(item));
+            } catch (e) {
+                console.error(e);
+            }
+        })();
+
+    </script>
+</body>
+
+</html>
